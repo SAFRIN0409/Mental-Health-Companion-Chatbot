@@ -4,7 +4,6 @@ import pandas as pd
 import plotly.express as px
 from google import genai
 from google.genai import types
-from transformers import pipeline
 from datetime import datetime
 import os
 import time
@@ -216,16 +215,24 @@ except FileNotFoundError:
 
 client = genai.Client(api_key=api_key)
 
-# 2. Load HuggingFace Emotion Model
-@st.cache_resource
-def load_emotion_model():
-    return pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base")
-
-try:
-    emotion_model = load_emotion_model()
-except Exception as e:
-    st.error(f"Error loading emotion model: {e}")
-    st.stop()
+# 2. Lightweight AI Emotion Detection (Replaces heavy Transformers/Torch)
+def get_ai_emotion(text):
+    """Detect emotion and confidence using Gemini instead of heavy local models."""
+    try:
+        prompt = f"""
+        Analyze the emotion in this text: "{text}"
+        Choose ONE from: joy, sadness, anger, fear, surprise, love, disgust.
+        Return the result in JSON format: {{"label": "emotion", "score": 0.95}}
+        """
+        res = client.models.generate_content(
+            model="gemini-flash-latest",
+            contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json")
+        )
+        data = json.loads(res.text)
+        return data
+    except Exception as e:
+        return {"label": "neutral", "score": 1.0}
 
 # --- Helper Functions ---
 
@@ -584,7 +591,7 @@ with tab1:
                 else:
                     # B. Emotion Detection
                     with st.spinner("Analyzing Mood..."):
-                        result = emotion_model(user_input)[0]
+                        result = get_ai_emotion(user_input)
                         emotion = result["label"]
                         confidence = result["score"] * 100
                         tone = get_tone(emotion)
@@ -807,7 +814,7 @@ with tab3:
             if st.button("Save Entry"):
                 if journal_text:
                     # Run Sentiment Analysis for Academic Gold
-                    res = emotion_model(journal_text)[0]
+                    res = get_ai_emotion(journal_text)
                     j_emotion = res["label"]
                     j_score = res["score"] * 100
                     
