@@ -1,5 +1,6 @@
 
 import streamlit as st
+print("🚀 Serenity App Starting...")
 import pandas as pd
 import plotly.express as px
 from google import genai
