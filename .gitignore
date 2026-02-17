@@ -17,4 +17,5 @@ secrets.toml
 chat_history/
 mood_log.csv
 *.txt
+!requirements.txt
 *.csv
