@@ -1,0 +1,20 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Streamlit secrets
+.streamlit/
+secrets.toml
+
+# Project specific
+chat_history/
+mood_log.csv
+*.txt
+*.csv
